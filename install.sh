@@ -46,10 +46,6 @@ main() {
 	# 用 https 协议克隆并应用配置(新机器无 ssh key 也能拉取)
 	printf "Running 'chezmoi init --apply %s'\n" "${repo_https}" >&2
 	"${chezmoi}" init --apply "${repo_https}"
-
-	# 完成后将 dotfiles 仓库远端切换为 ssh,便于后续提交
-	printf "Switching origin remote to %s\n" "${repo_ssh}" >&2
-	"${chezmoi}" git -- remote set-url origin "${repo_ssh}"
 }
 
 main "$@"

@@ -1,0 +1,83 @@
+# =============================================================================
+# Core CLI packages
+# =============================================================================
+# Declares the packages installed by
+# .chezmoiscripts/run_onchange_after_00-install-core.sh.tmpl.
+#
+# Each entry maps a package manager key to that manager's package name:
+#   dnf    -> Fedora / RHEL / CentOS / Rocky / AlmaLinux
+#   apt    -> Debian / Ubuntu / Linux Mint / Pop!_OS
+#   pacman -> Arch / Manjaro / EndeavourOS
+#   brew   -> macOS (and Linuxbrew)
+# A missing key means the package is unavailable from that manager and is
+# skipped there. Packages with no manager key (e.g. ghq) are handled by a
+# dedicated fallback in the install script.
+
+[[packages]]
+name = "eza"
+dnf = "eza"
+apt = "eza"
+pacman = "eza"
+brew = "eza"
+
+[[packages]]
+name = "gh"
+dnf = "gh"
+apt = "gh"
+pacman = "github-cli"
+brew = "gh"
+
+[[packages]]
+name = "fzf"
+dnf = "fzf"
+apt = "fzf"
+pacman = "fzf"
+brew = "fzf"
+
+[[packages]]
+name = "fd-find"
+dnf = "fd-find"
+apt = "fd-find"
+pacman = "fd"
+brew = "fd"
+
+[[packages]]
+name = "tig"
+dnf = "tig"
+apt = "tig"
+pacman = "tig"
+brew = "tig"
+
+[[packages]]
+name = "ripgrep"
+dnf = "ripgrep"
+apt = "ripgrep"
+pacman = "ripgrep"
+brew = "ripgrep"
+
+[[packages]]
+name = "tree-sitter-cli"
+dnf = "tree-sitter-cli"
+apt = "tree-sitter-cli"
+pacman = "tree-sitter-cli"
+brew = "tree-sitter"
+
+[[packages]]
+name = "zsh"
+dnf = "zsh"
+apt = "zsh"
+pacman = "zsh"
+brew = "zsh"
+
+[[packages]]
+name = "tree"
+dnf = "tree"
+apt = "tree"
+pacman = "tree"
+brew = "tree"
+
+# ghq is not packaged in most distro repositories; installed via the fallback
+# (brew or `go install`) in the install script.
+[[packages]]
+name = "ghq"
+brew = "ghq"

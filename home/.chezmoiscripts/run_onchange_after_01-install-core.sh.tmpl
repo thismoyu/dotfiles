@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Chezmoi Script: Install Core Packages
+# =============================================================================
+# Builds the install list by filtering .chezmoidata.toml at template render
+# time, then installs everything in a single pass with the package manager that
+# matches the detected OS (dnf / apt / pacman / brew).
+#
+# The rendered package list is embedded inline below, so this run_onchange_
+# script re-runs automatically whenever packages are added to or removed from
+# .chezmoidata.toml.
+
+{{ $mgr := "" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $mgr = "brew" -}}
+{{- else if eq .chezmoi.os "linux" -}}
+{{-   $id := "" -}}{{ if hasKey .chezmoi.osRelease "id" }}{{ $id = .chezmoi.osRelease.id }}{{ end -}}
+{{-   $idLike := "" -}}{{ if hasKey .chezmoi.osRelease "idLike" }}{{ $idLike = .chezmoi.osRelease.idLike }}{{ end -}}
+{{-   $family := lower (printf "%s %s" $id $idLike) -}}
+{{-   if regexMatch "fedora|rhel|centos|rocky|almalinux" $family -}}
+{{-     $mgr = "dnf" -}}
+{{-   else if regexMatch "debian|ubuntu|mint|pop" $family -}}
+{{-     $mgr = "apt" -}}
+{{-   else if regexMatch "arch|manjaro|endeavour" $family -}}
+{{-     $mgr = "pacman" -}}
+{{-   end -}}
+{{- end -}}
+{{- $pkgs := list -}}
+{{- range .packages -}}
+{{-   if and (ne $mgr "") (hasKey . $mgr) -}}
+{{-     $pkgs = append $pkgs (index . $mgr) -}}
+{{-   end -}}
+{{- end -}}
+
+set -euo pipefail
+
+{{ if eq $mgr "" }}
+echo "install-core: 未识别的系统 ({{ .chezmoi.os }}{{ if hasKey .chezmoi.osRelease "id" }}/{{ .chezmoi.osRelease.id }}{{ end }})，跳过核心工具安装。" >&2
+exit 0
+{{- else }}
+
+echo "install-core: 使用 {{ $mgr }} 安装核心工具..."
+{{ if eq $mgr "dnf" }}
+sudo dnf install -y {{ $pkgs | join " " }}
+
+{{- else if eq $mgr "apt" }}
+export DEBIAN_FRONTEND=noninteractive
+sudo apt-get update
+sudo apt-get install -y {{ $pkgs | join " " }}
+
+{{- else if eq $mgr "pacman" }}
+sudo pacman -Sy --needed --noconfirm {{ $pkgs | join " " }}
+
+{{- else if eq $mgr "brew" }}
+brew install {{ $pkgs | join " " }}
+{{- end }}
+
+# ghq 官方仓库大多未打包，优先使用 brew，否则回退到 go install。
+if ! command -v ghq >/dev/null 2>&1; then
+	if command -v brew >/dev/null 2>&1; then
+		brew install ghq
+	elif command -v go >/dev/null 2>&1; then
+		go install github.com/x-motemen/ghq@latest
+	else
+		echo "install-core: 未找到 brew 或 go，跳过 ghq，请手动安装：https://github.com/x-motemen/ghq" >&2
+	fi
+fi
+
+echo "install-core: 完成。"
+{{- end }}
