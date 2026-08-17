@@ -1,0 +1,14 @@
+{{- $environment := promptChoiceOnce . "environment" "Environment" (list "home" "work") -}}
+{{- $workName := "" -}}
+{{- $workEmail := "" -}}
+{{- if eq $environment "work" -}}
+{{-   $workName = promptStringOnce . "git.workName" "Work git user.name" -}}
+{{-   $workEmail = promptStringOnce . "git.workEmail" "Work git user.email" -}}
+{{- end -}}
+[data]
+    environment = {{ $environment | quote }}
+{{- if eq $environment "work" }}
+[data.git]
+    workName = {{ $workName | quote }}
+    workEmail = {{ $workEmail | quote }}
+{{- end }}

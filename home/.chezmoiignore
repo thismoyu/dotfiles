@@ -1,0 +1,4 @@
+# gerrit 相关(工作用、含内网信息)保留在本地,不纳入 chezmoi 管理
+.ssh/gerrit
+.ssh/gerrit.pub
+.ssh/config.d/gerrit.conf

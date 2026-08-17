@@ -1,0 +1,25 @@
+/*******************************************************
+ * ROFI configs: powermenu
+ *******************************************************/
+configuration {
+    font:                           "Maple Mono NF CN 12";
+    show-icons:                     false;
+    scroll-method:                  0;
+    disable-history:                false;
+    sidebar-mode: 		            false;
+}
+
+@import "~/.config/rofi/catppuccin-default.rasi"
+
+window {
+    background-color:               @background;
+    border:                         0;
+    padding:                        10;
+    transparency:                   "real";
+    width:                          300px;
+}
+listview {
+    lines:                          4;
+    columns:                        1;
+    scrollbar:			false;
+}

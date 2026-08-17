@@ -1,0 +1,16 @@
+[user]
+    name = Eugene
+    email = dev@eepo.de
+    # PUBLIC_KEY same with github signing ssh key
+    signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOZjUXlVMdFUciqVSkLd1YMmVQqVWWD9WypaMWfE5oKY"
+[gpg]
+    format = ssh
+
+[gpg.ssh]
+    allowedSignersFile = ~/.config/git/signers
+
+[commit]
+    gpgsign = true
+
+[tag]
+    gpgsign = true

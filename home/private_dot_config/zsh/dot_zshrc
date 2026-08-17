@@ -1,0 +1,160 @@
+# 交互式 shell：选项、插件、补全、提示符、键位、别名
+
+# 加载 functions/ 下的所有函数定义（(N) 让无匹配时静默跳过）
+for f in "$ZDOTDIR/functions"/*.zsh(N); do
+  source "$f"
+done
+
+# --- zsh 选项 ---
+setopt no_nomatch              # 通配符无匹配时按原样传参，不报错
+
+# 历史
+setopt appendhistory           # 退出时追加写入历史文件，不覆盖（多终端不互相冲掉）
+setopt hist_ignore_all_dups    # 新命令与历史中任意重复项冲突时，删除旧的只留最新
+setopt hist_save_no_dups       # 写入历史文件时丢弃重复项
+setopt hist_find_no_dups       # 翻/搜索历史时跳过重复项
+setopt hist_reduce_blanks      # 记录前压缩多余空白
+
+# 目录跳转
+setopt AUTO_CD                 # 直接输入目录名即可进入，无需 cd
+setopt AUTO_PUSHD              # 每次 cd 自动入栈，可用 cd -1/-2 回退
+setopt PUSHD_IGNORE_DUPS       # 目录栈中不保留重复项
+
+# 单词边界按 bash 风格（Ctrl+W / 光标移动以 / . 等为分隔）
+autoload -U select-word-style
+select-word-style bash
+
+# --- 历史 ---
+HISTFILE="$HOME/.zsh_history"                           # 历史文件位置
+HISTSIZE=10000                                          # 内存中保留的历史条数
+SAVEHIST=10000                                          # 写入文件的历史条数
+HISTORY_IGNORE='(clear|reset|c|r|q|ls|cd|bg|fg|exit)'   # 匹配整行则不写入历史
+
+# --- zinit（插件管理器）---
+ZINIT_HOME="${XDG_DATA_HOME}/zinit/zinit.git"
+if [[ ! -d "$ZINIT_HOME" ]]; then   # 首次使用时自动克隆 zinit
+  mkdir -p "$(dirname "$ZINIT_HOME")"
+  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
+source "${ZINIT_HOME}/zinit.zsh"
+
+zinit ice depth=1                              # 浅克隆，加快下载
+zinit light zsh-users/zsh-syntax-highlighting  # 命令语法高亮
+zinit light zsh-users/zsh-completions          # 补充第三方补全定义
+zinit light zsh-users/zsh-autosuggestions      # 根据历史给出灰色行内建议
+zinit light Aloxaf/fzf-tab                     # 用 fzf 交互式选择补全项
+
+# 初始化补全系统，并为 gd 命令绑定自定义补全函数
+# 把 .zcompdump 放到 XDG 缓存目录，避免污染 $ZDOTDIR
+_zcompdump="$XDG_CACHE_HOME/zsh/.zcompdump"
+[[ -d "${_zcompdump:h}" ]] || mkdir -p "${_zcompdump:h}"
+autoload -Uz compinit && compinit -d "$_zcompdump"
+compdef _gd_dir_list gd
+
+# --- 补全 ---
+zstyle ':completion:*' use-cache on                          # 开启补全缓存
+zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/.zcompcache"  # 缓存位置
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'       # 小写可匹配大写（忽略大小写）
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"      # 补全列表按 LS_COLORS 着色
+zstyle ':completion:*' menu no                               # 关闭原生菜单（交给 fzf-tab）
+zstyle ':completion:*' squeeze-slashes true                  # 合并路径中多余的斜杠
+zstyle ':completion:*:descriptions' format '[|| %d ||]'      # 分组描述的显示格式
+zstyle ':fzf-tab:*' switch-group '<' '>'                     # 用 < > 在补全分组间切换
+zstyle ':fzf-tab:*' use-fzf-default-opts yes                 # 复用 FZF_DEFAULT_OPTS 配色
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'  # cd 补全时预览目录内容
+
+# --- 键位 ---
+bindkey "^[[1;5C" forward-word   # Ctrl+Right 向右跳一个词
+bindkey "^[[1;5D" backward-word  # Ctrl+Left  向左跳一个词
+# Home 键：兼容不同终端的转义序列
+bindkey "^[[H"    beginning-of-line
+bindkey "^[OH"    beginning-of-line
+bindkey "^[[1~"   beginning-of-line
+bindkey "${terminfo[khome]}" beginning-of-line 2>/dev/null
+# End 键：兼容不同终端的转义序列
+bindkey "^[[F"    end-of-line
+bindkey "^[OF"    end-of-line
+bindkey "^[[4~"   end-of-line
+bindkey "${terminfo[kend]}"  end-of-line 2>/dev/null
+
+# --- 别名 ---
+alias zsh_source='source "${ZDOTDIR}/.zshrc"'  # 重新加载配置
+alias zsh_reload='exec zsh'                    # 用新进程重启 zsh
+alias cz=chezmoi
+alias zshconfig="nvim ${ZDOTDIR}/.zshrc"       # 快速编辑本文件
+
+# Debian/Ubuntu 上 fd 的可执行名是 fdfind，存在则重映射为 fd
+(( $+commands[fdfind] )) && alias fd='fdfind'
+
+alias mv='mv -v' rm='rm -v' cp='cp -v'         # 文件操作显示详情
+alias -- -='cd -'                              # 输入 - 回到上一个目录
+alias ~='cd ~'
+alias c='clear' r='reset' q='exit'
+alias open='xdg-open'
+
+# Debian/Ubuntu 上 bat 的可执行名是 batcat
+(( $+commands[batcat] )) && alias bat='batcat --style=plain'
+
+# ls 系列：优先用 eza，否则回退到带颜色的原生 ls
+if (( $+commands[eza] )); then
+  alias eza='eza --color=auto --icons=never --hyperlink=never'
+  alias ls='eza -l --group-directories-first --sort=extension'
+  alias la='eza -al --group-directories-first --sort=extension'
+elif (( $+commands[dircolors] )); then
+  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+  alias ls='ls --color=auto' ll='ls -alF --color=auto'
+  alias la='ls -A --color=auto' l='ls -CF --color=auto'
+  alias grep='grep --color=auto'
+fi
+
+# fzf 选进程后 kill
+alias rkill="pid=\$(adb shell ps -A | fzf | awk '{print \$2}'); [[ -n \$pid ]] && adb shell kill -9 \$pid"
+alias kcat='kitten icat' kdiff='kitten diff' ktheme='kitten themes'  # kitty 工具
+alias aremount='adb root; adb remount'                               # adb 以 root 重新挂载
+alias apush='adb push' apull='adb pull'
+alias gitroot='cd $(git root)'                                       # 跳到 git 仓库根
+
+# 后缀别名：直接输入文件名即用对应程序打开
+alias -s md=typora go='$EDITOR' rs='$EDITOR'
+alias -s txt=subl log=subl kt=subl java=subl cpp=subl h=subl xml=subl
+
+# --- fzf ---
+if (( $+commands[fzf] )); then
+  source <(fzf --zsh)                # 加载 fzf 的键位与补全（Ctrl+T / Ctrl+R / Alt+C）
+  # Catppuccin Latte 配色
+  export FZF_DEFAULT_OPTS=" \
+--color=bg+:#CCD0DA,bg:#EFF1F5,spinner:#DC8A78,hl:#D20F39 \
+--color=fg:#4C4F69,header:#D20F39,info:#8839EF,pointer:#DC8A78 \
+--color=marker:#7287FD,fg+:#4C4F69,prompt:#8839EF,hl+:#D20F39 \
+--color=selected-bg:#BCC0CC \
+--color=border:#9CA0B0,label:#4C4F69 \
+--bind='ctrl-o:execute(xdg-open {})+abort'"
+  # 用 fd 作为 fzf 的默认查找命令（尊重 .gitignore）
+  _fzf_fd='fd --type f'
+  (( $+commands[fdfind] )) && _fzf_fd='fdfind --type f'
+  export FZF_DEFAULT_COMMAND="$_fzf_fd"
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+
+# --- fnm（Node 版本管理）---
+if (( $+commands[fnm] )); then
+  eval "$(fnm env --shell zsh)"
+fi
+
+# --- 桌面代理（Cinnamon / GNOME）---
+if [[ "$DESKTOP_SESSION" == "cinnamon" || "$DESKTOP_SESSION" == "gnome" ]]; then
+  proxy_sync quiet
+fi
+
+# 默认提示符（gitstatus 未加载时使用）
+if [[ -z "$PROMPT" ]]; then
+  PROMPT='%F{green}[%T]%f %F{blue}%B%2~%b%f %F{green}❯%f '
+fi
+
+# gitstatus 右提示符（可选，需 ~/gitstatus/gitstatus.prompt.zsh）
+# https://github.com/romkatv/gitstatus
+if [[ -f "$HOME/gitstatus/gitstatus.prompt.zsh" ]]; then
+  source "$HOME/gitstatus/gitstatus.prompt.zsh"
+  RPROMPT='$GITSTATUS_PROMPT'
+  PROMPT='%F{green}[%T]%f %F{blue}%B%2~%b%f %F{green}❯%f '
+fi

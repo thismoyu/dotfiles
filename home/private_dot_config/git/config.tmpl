@@ -1,0 +1,243 @@
+#-------------------------- user identity -----------------#
+{{- if eq .environment "home" }}
+[include]
+  path = ~/.config/git/personal
+{{- else }}
+[user]
+  name = {{ .git.workName }}
+  email = {{ .git.workEmail }}
+[commit]
+  gpgsign = false
+[tag]
+  gpgsign = false
+[includeIf "gitdir:~/.local/share/chezmoi/"]
+  path = ~/.config/git/personal
+[includeIf "gitdir:~/personal/"]
+  path = ~/.config/git/personal
+[includeIf "gitdir:~/repos/"]
+  path = ~/.config/git/personal
+{{- end }}
+
+#-------------------------- basic ------------------------------#
+[http]
+  proxy = http://127.0.0.1:7890
+  version = HTTP/1.1
+[https]
+  proxy = https://127.0.0.1:7890
+
+[alias]
+  # Get default branch name (copied from https://stackoverflow.com/a/67672350/14870317)
+  defaultBranch = !git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
+  # Checkout to defaultBranch
+  default = !git checkout $(git defaultBranch)
+
+  # List aliases.
+  aliases = config --get-regexp alias
+
+  # Amend the currently staged files to the latest commit.
+  amend = commit --amend --reuse-message=HEAD
+
+  tags = tag -l
+  branches = branch -a
+  remotes = remote -v
+
+  # List contributors with number of commits.
+  contributors = shortlog --summary --numbered
+
+  # Show the user email for the current repository.
+  whoami = config user.email
+
+  # 查看当前分支对应的上游
+  upstream = rev-parse --symbolic-full-name --abbrev-ref HEAD@{upstream}
+
+  # 退回已经进入暂存区的内容
+  unstage = reset HEAD --
+
+  # 查看最新的一笔修改
+  last = log -1
+
+  # am 合入分支时，保留中括号
+  amk = am --keep-non-patch
+  
+  # 查看当前路径对应的仓库根目录
+  root = rev-parse --show-toplevel
+
+  # 将diff 颜色化输出，然后使用pager.dsf 渲染
+  dsf = diff --color
+  
+  # 查看当前分支
+  current = rev-parse --abbrev-ref HEAD
+
+  # stash 所有修改，包括没有跟踪的修改
+  stash-all = stash push -u
+
+  # 回退上一笔提交，但是保留在暂存区
+  uncommit = reset --soft HEAD~1
+
+  # 清空工作区，不保留修改
+  wipe = reset HEAD --hard
+
+  # 格式化输出log内容（使用相对时间）
+  lg = log --graph --abbrev-commit --decorate --date-order --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %aN%C(reset)%C(bold yellow)%d%C(reset)' --all
+
+  # 使用绝对时间
+  lgt = log --graph --abbrev-commit --decorate --date-order --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n'' %C(white)%s%C(reset) %C(dim white)- %aN%C(reset)' --all
+
+  # git switch or create bracnh
+  switchoc = "!f() { git switch $1 2>/dev/null || git switch -c $1; }; f"
+  # git checkout or create <branch> , same with 'switchoc'
+  checkoutoc = "!f() { git checkout $(git show-ref --verify --quiet refs/heads/\"$1\" || echo '-b') \"$1\"; }; f"
+
+[status]
+  ; 添加新文件夹时，显示文件夹内容，否则只会显示该文件夹名字
+  showUntrackedFiles = all
+  ;
+  branch = true
+  ; short = true
+  showStash = true
+
+[core]
+  ; 显示中文
+  quotepath = false
+
+  editor = nvim
+  autocrlf = input
+
+  ; 一下两个是用来加速 大仓库中 status 功能的
+  ; feature.manyFiles = true 会同时打开 这两个配置
+  ; 并添加 index.version=4 index.skipHash=true ，但是这两个可会导致老系统出现兼容性问题
+
+  ; Git 在 index 里缓存「每个目录里有哪些未跟踪文件」，并记下目录的 mtime
+  untrackedCache = true
+  ; 2.31+ 让 Git 听操作系统的文件变更通知（Linux 上是 inotify 一类）
+  fsmonitor = true
+
+[init]
+  ; 默认分支为 main，不再使用 master
+  ; defaultBranch = main
+
+[branch]
+  ; 分支列表按最新使用排序
+  sort = -committerdate
+
+[mergetool]
+  # 不保留.org文件
+  keepBackup = false
+
+[merge]
+  tool = bc
+  ;need git version 2.35+
+  conflictstyle = zdiff3
+
+[diff]
+  algorithm = histogram
+  colorMoved = default
+  context = 3  # less context in diffs
+  # renames = copies  # detect copies as renames in diffs
+  interHunkContext = 10  # merge near hunks in diffs
+
+[pull]
+  rebase = true
+
+[stash]
+  showPatch = true
+
+[push]
+    autoSetupRemote = true  # easier to push new branches
+    default = current  # push only current branch by default
+    ; followTags = true  # push also tags # 不打开，手动推送tag
+
+[rebase]
+    ; 如果本地有未提交的更改，--autostash 可以在 rebase 前自动暂存和恢复这些更改
+    autoStash = true 
+
+[commit]
+  template = ~/.config/git/commit-template
+  ;commit editor 显示详细信息
+  verbose = true
+
+[pager]
+  branch = false  # no need to use pager for git branch
+  dsf = diff-so-fancy | less --tabs=4 -RFXS
+
+[log]
+  ; display dates as 2024-11-15 11:16:53 +0800 instead of Fri Nov 15 11:16:53 2024 +0800
+  date = iso
+
+[blame]
+  coloring = highlightRecent
+  date = relative
+
+; 影响交互式场景，例如:
+; git add -p
+; git stash -p 等需要手动确定的diff
+[interactive]
+  diffFilter = diff-so-fancy --patch
+
+#-------------------------- URL shortcuts ----------------------#
+[url "git@github.com:"]
+  insteadOf = "gh:"
+
+[url "git@github.com:thismoyu/"]
+  insteadOf = "self:"
+
+#-------------------------- Color ------------------------------#
+
+[color]
+  ui = auto
+
+[color "branch"]
+  current  = magenta
+  local    = default
+  remote   = yellow
+  upstream = green
+  plain    = blue
+
+[color "blame"]
+    highlightRecent = default,1 month ago,cyan,7 days ago,blue
+
+; dsf 用不上
+[color "diff-highlight"]
+  oldNormal = red bold
+  oldHighlight = red bold 52
+  newNormal = green bold
+  newHighlight = green bold 22
+
+[color "status"]
+  added = green
+  changed = yellow
+  untracked = red bold
+
+[color "diff"]
+  meta = yellow bold
+  commit = green bold
+  frag = magenta bold
+  old = red bold
+  new = green bold
+  whitespace = red reverse
+
+  newMoved = cyan dim
+  oldMoved = blue dim
+  newMovedAlternative = cyan italic
+  oldMovedAlternative = blue italic
+
+#--------------------------  Tig  ------------------------------#
+[tig] 
+  show-changes = true
+  tab-size = 4    # Number of spaces per tab
+
+[tig "color"] 
+  #cursor = yellow red bold
+
+[tig "bind"] 
+  generic = P parent
+
+#-----------------  Diff so fancy  ------------------------------#
+[diff-so-fancy]
+  markEmptyLines = false
+
+#-----------------  ghq  ------------------------------#
+# https://github.com/x-motemen/ghq
+# GHQ_ROOT should be repos in env
+[ghq]
+  root=~/repos

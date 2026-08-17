@@ -1,0 +1,24 @@
+# Add android bp type.
+--type-add
+bp:*.{bp}
+
+# Add android mk type.
+--type-add
+mk:*.{mk}
+
+# Add selinux
+--type-add
+te:*.{te}
+
+
+# like Silver Searcher's output
+# --colors=line:fg:yellow
+# --colors=line:style:bold
+# --colors=path:fg:green
+# --colors=path:style:bold
+# --colors=match:fg:black
+# --colors=match:bg:yellow
+# --colors=match:style:nobold
+
+# Because who cares about case!?
+--smart-case

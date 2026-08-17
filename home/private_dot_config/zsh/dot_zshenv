@@ -1,0 +1,46 @@
+# 与 shell 类型无关的环境变量（login / non-login / interactive / non-interactive）
+
+# XDG Base Directory
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_STATE_HOME="$HOME/.local/state"
+
+# 开发工具
+export GOPATH="$HOME/go"
+export CARGO_HOME="$HOME/.cargo"
+export RUSTUP_HOME="$HOME/.rustup"
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export RIPGREP_CONFIG_PATH=$HOME/.ripgreprc
+
+# PATH
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PNPM_HOME:$PATH"
+
+if [[ -d /usr/local/go/bin ]]; then
+  export GOROOT="/usr/local/go"
+  export PATH="$GOROOT/bin:$PATH"
+fi
+
+if [[ -d /usr/local/dart-sass ]]; then
+  export PATH="/usr/local/dart-sass:$PATH"
+fi
+
+if [[ -d "$HOME/.local/share/fnm" ]]; then
+  export PATH="$HOME/.local/share/fnm:$PATH"
+fi
+
+if [[ -d "$HOME/.local/share/android-platform-tools" ]]; then
+    export PATH="$HOME/.local/share/android-platform-tools:$PATH"
+fi
+
+# EDITOR（PATH 构建完成后检测，确保能找到自定义目录下的编辑器）
+if (( $+commands[nvim] )); then
+  export EDITOR="nvim"
+elif (( $+commands[vim] )); then
+  export EDITOR="vim"
+else
+  export EDITOR="vi"
+fi
+
+# Bitwarden SSH agent
+export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"

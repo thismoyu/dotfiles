@@ -1,0 +1,15 @@
+[".config/nvim"]
+    type = "git-repo"
+    url = "https://github.com/thismoyu/nvim-config.git"
+    refreshPeriod = "168h"
+
+[".local/share/fcitx5/rime"]
+    type = "git-repo"
+    url = "https://github.com/thismoyu/oh-my-rime.git"
+    refreshPeriod = "168h"
+
+[".local/share/android-platform-tools"]
+  type = "archive"
+  url = "https://dl.google.com/android/repository/platform-tools-latest-linux.zip"
+  stripComponents = 1
+  refreshPeriod = "720h"
