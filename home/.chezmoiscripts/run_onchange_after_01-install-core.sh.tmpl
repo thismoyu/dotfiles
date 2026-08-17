@@ -2,13 +2,14 @@
 # =============================================================================
 # Chezmoi Script: Install Core Packages
 # =============================================================================
-# Builds the install list by filtering .chezmoidata.toml at template render
-# time, then installs everything in a single pass with the package manager that
-# matches the detected OS (dnf / apt / pacman / brew).
+# Detects the OS package manager at template render time, then installs each
+# module one by one directly in this script. Package names are declared inline
+# per module (no longer sourced from .chezmoidata.toml), so this run_onchange_
+# script re-runs automatically whenever a module is added, removed, or changed.
 #
-# The rendered package list is embedded inline below, so this run_onchange_
-# script re-runs automatically whenever packages are added to or removed from
-# .chezmoidata.toml.
+# Add a new module by appending an `install_module` call below:
+#   install_module <dnf> <apt> <pacman> <brew>
+# Use "-" for a manager that has no matching package.
 
 {{ $mgr := "" -}}
 {{- if eq .chezmoi.os "darwin" -}}
@@ -25,12 +26,6 @@
 {{-     $mgr = "pacman" -}}
 {{-   end -}}
 {{- end -}}
-{{- $pkgs := list -}}
-{{- range .packages -}}
-{{-   if and (ne $mgr "") (hasKey . $mgr) -}}
-{{-     $pkgs = append $pkgs (index . $mgr) -}}
-{{-   end -}}
-{{- end -}}
 
 set -euo pipefail
 
@@ -39,31 +34,68 @@ echo "install-core: 未识别的系统 ({{ .chezmoi.os }}{{ if hasKey .chezmoi.o
 exit 0
 {{- else }}
 
-echo "install-core: 使用 {{ $mgr }} 安装核心工具..."
-{{ if eq $mgr "dnf" }}
-sudo dnf install -y {{ $pkgs | join " " }}
+MGR="{{ $mgr }}"
 
-{{- else if eq $mgr "apt" }}
+echo "install-core: 使用 $MGR 安装核心工具..."
+
+{{ if eq $mgr "apt" }}
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
-sudo apt-get install -y {{ $pkgs | join " " }}
-
-{{- else if eq $mgr "pacman" }}
-sudo pacman -Sy --needed --noconfirm {{ $pkgs | join " " }}
-
-{{- else if eq $mgr "brew" }}
-brew install {{ $pkgs | join " " }}
 {{- end }}
 
-# ghq 官方仓库大多未打包，优先使用 brew，否则回退到 go install。
-if ! command -v ghq >/dev/null 2>&1; then
-	if command -v brew >/dev/null 2>&1; then
-		brew install ghq
-	elif command -v go >/dev/null 2>&1; then
-		go install github.com/x-motemen/ghq@latest
-	else
-		echo "install-core: 未找到 brew 或 go，跳过 ghq，请手动安装：https://github.com/x-motemen/ghq" >&2
+# install_module <dnf> <apt> <pacman> <brew>
+# 根据当前包管理器选择对应名称并单独安装一个模块。"-" 表示该管理器无此包。
+install_module() {
+	local dnf_name="$1" apt_name="$2" pacman_name="$3" brew_name="$4"
+	local name=""
+	case "$MGR" in
+		dnf) name="$dnf_name" ;;
+		apt) name="$apt_name" ;;
+		pacman) name="$pacman_name" ;;
+		brew) name="$brew_name" ;;
+	esac
+
+	if [ -z "$name" ] || [ "$name" = "-" ]; then
+		echo "install-core: 跳过（$MGR 无对应包）"
+		return 0
 	fi
+
+	echo "install-core: 安装 $name ..."
+	case "$MGR" in
+		dnf) sudo dnf install -y "$name" ;;
+		apt) sudo apt-get install -y "$name" ;;
+		pacman) sudo pacman -Sy --needed --noconfirm "$name" ;;
+		brew) brew install "$name" ;;
+	esac
+}
+
+# 一个模块一个模块地安装
+# install_module <dnf> <apt> <pacman> <brew>
+install_module curl      curl    curl       curl
+install_module nmap-ncat ncat    nmap       nmap
+install_module eza       eza     eza        eza
+install_module gh        gh      github-cli gh
+install_module fzf       fzf     fzf        fzf
+install_module fd-find   fd-find fd         fd
+install_module tig       tig     tig        tig
+install_module ripgrep   ripgrep ripgrep    ripgrep
+install_module zsh       zsh     zsh        zsh
+install_module tree      tree    tree       tree
+
+# ghq 官方仓库大多未打包，直接下载官方 release 到 ~/.local/bin。
+{{ if eq .chezmoi.os "darwin" -}}
+GHQ_URL="https://github.com/x-motemen/ghq/releases/download/v1.10.1/ghq_darwin_amd64.zip"
+{{- else -}}
+GHQ_URL="https://github.com/x-motemen/ghq/releases/download/v1.10.1/ghq_linux_amd64.zip"
+{{- end }}
+if ! command -v ghq >/dev/null 2>&1; then
+	echo "install-core: 安装 ghq ..."
+	mkdir -p "$HOME/.local/bin"
+	tmp="$(mktemp -d)"
+	curl -fsSL -o "$tmp/ghq.zip" "$GHQ_URL"
+	unzip -o "$tmp/ghq.zip" -d "$tmp" >/dev/null
+	install -m 0755 "$tmp"/ghq_*/ghq "$HOME/.local/bin/ghq"
+	rm -rf "$tmp"
 fi
 
 echo "install-core: 完成。"
