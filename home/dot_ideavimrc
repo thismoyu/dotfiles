@@ -1,0 +1,51 @@
+" M->cmd, A->option, C->control
+" <ESC> - escape, <BS> - backspace, <CR> - return
+
+let mapleader = " "          " 设置 Space 为 Leader 键
+
+" ==============================================================================
+" 1. 基础配置（与 Neovim 保持一致）
+" ==============================================================================
+set hlsearch                " 高亮搜索
+set incsearch               " 增量搜索
+set ignorecase smartcase    " 忽略大小写智能匹配
+set clipboard+=unnamed      " 共享系统剪贴板
+set clipboard+=ideaput
+
+" 显示行号
+set nu
+
+"" -- Suggested options --
+" Show a few lines of context around the cursor. Note that this makes the
+" text scroll if you mouse-click near the start or end of the window.
+set scrolloff=5
+
+" --- Enable IdeaVim plugins https://jb.gg/ideavim-plugins
+" Highlight copied text
+Plug 'machakann/vim-highlightedyank'
+
+" https://github.com/JetBrains/ideavim/wiki/IdeaVim-Plugins
+set surround                " 对应 vim-surround / nvim-surround (ys, cs, ds)
+set commentary              " 对应 vim-commentary / Comment.nvim (gcc, gc)
+set argtextobj              " 参数文本对象 (cia, daa)
+set easymotion              " 对应 hop.nvim / flash.nvim
+set which-key               " 像 Neovim 一样弹窗提示你的 Leader 快捷键！
+set multiple-cursors
+
+
+noremap <C-O> :action Back<CR>
+noremap <C-I> :action Forward<CR>
+noremap <C-D> <C-D>zz
+noremap <C-U> <C-U>zz
+noremap J <ESC>:action EditorJoinLines<CR>
+
+" 文件导航定位到当前文件
+noremap <leader>` <ESC>:action SelectInProjectView<CR>
+" quit
+noremap <leader>q :wq<CR>
+" error description
+noremap <leader>e <ESC>:action ShowErrorDescription<CR>
+" usage
+noremap <leader>u <ESC>:action ShowUsages<CR>
+" Windows或者MacOS的快捷键都与t相关, 所以选择t作为键
+noremap <leader>t <ESC>:action Refactorings.QuickListPopupAction<CR>
