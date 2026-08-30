@@ -28,24 +28,51 @@ Plug 'machakann/vim-highlightedyank'
 set surround                " 对应 vim-surround / nvim-surround (ys, cs, ds)
 set commentary              " 对应 vim-commentary / Comment.nvim (gcc, gc)
 set argtextobj              " 参数文本对象 (cia, daa)
-set easymotion              " 对应 hop.nvim / flash.nvim
-set which-key               " 像 Neovim 一样弹窗提示你的 Leader 快捷键！
 set multiple-cursors
 
 
-noremap <C-O> :action Back<CR>
-noremap <C-I> :action Forward<CR>
-noremap <C-D> <C-D>zz
-noremap <C-U> <C-U>zz
-noremap J <ESC>:action EditorJoinLines<CR>
+" <Action> 必须用 map/nmap（不能用 noremap/nnoremap），且 map 行不能写行尾注释
+nmap <C-O> <Action>(Back)
+nmap <C-I> <Action>(Forward)
+nnoremap <C-D> <C-D>zz
+nnoremap <C-U> <C-U>zz
+nmap J <Action>(EditorJoinLines)
 
 " 文件导航定位到当前文件
-noremap <leader>` <ESC>:action SelectInProjectView<CR>
+nmap <leader>` <Action>(SelectInProjectView)
 " quit
-noremap <leader>q :wq<CR>
-" error description
-noremap <leader>e <ESC>:action ShowErrorDescription<CR>
-" usage
-noremap <leader>u <ESC>:action ShowUsages<CR>
-" Windows或者MacOS的快捷键都与t相关, 所以选择t作为键
-noremap <leader>t <ESC>:action Refactorings.QuickListPopupAction<CR>
+nnoremap <leader>q :wq<CR>
+
+" 代码跳转与查看
+nmap gd <Action>(GotoDeclaration)
+nmap gD <Action>(GotoTypeDeclaration)
+nmap gi <Action>(GotoImplementation)
+nmap gr <Action>(FindUsages)
+nmap K  <Action>(QuickJavaDoc)
+
+" 重构与代码修改
+nmap <leader>rn <Action>(RenameElement)
+nmap <leader>ca <Action>(ShowIntentionActions)
+nmap <leader>fm <Action>(ReformatCode)
+
+" 错误/警告跳转 (仿 vim.diagnostic.goto_next/prev)
+nmap [d <Action>(GotoPreviousError)
+nmap ]d <Action>(GotoNextError)
+
+" ==============================================================================
+" 仿 Neovim Telescope / fzf 搜索快捷键 -> 映射到 IDE 搜索
+" ==============================================================================
+nmap <leader>ff <Action>(GotoFile)
+nmap <leader>fg <Action>(FindInPath)
+nmap <leader>fb <Action>(RecentFiles)
+nmap <leader>fs <Action>(GotoSymbol)
+nmap <leader><space> <Action>(SearchEverywhere)
+
+" 文件树切换 (仿 Neo-tree / Nvim-tree)
+nmap <leader>e <Action>(ActivateProjectToolWindow)
+
+" 窗口跳转 (与 Neovim 窗格跳转一致)
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
