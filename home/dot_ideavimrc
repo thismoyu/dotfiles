@@ -1,5 +1,8 @@
 " M->cmd, A->option, C->control
 " <ESC> - escape, <BS> - backspace, <CR> - return
+"
+" 关闭工具窗口（Find Usages / Project 等）：Shift+Esc
+" （Hide Active Tool Window；焦点在工具窗口时用 IDE 快捷键，IdeaVim 映射无效）
 
 let mapleader = " "          " 设置 Space 为 Leader 键
 
@@ -26,7 +29,6 @@ Plug 'machakann/vim-highlightedyank'
 
 " https://github.com/JetBrains/ideavim/wiki/IdeaVim-Plugins
 set surround                " 对应 vim-surround / nvim-surround (ys, cs, ds)
-set commentary              " 对应 vim-commentary / Comment.nvim (gcc, gc)
 set argtextobj              " 参数文本对象 (cia, daa)
 set multiple-cursors
 
@@ -38,35 +40,56 @@ nnoremap <C-D> <C-D>zz
 nnoremap <C-U> <C-U>zz
 nmap J <Action>(EditorJoinLines)
 
+" 双击 Esc 取消搜索高亮
+nnoremap <Esc><Esc> :nohlsearch<CR>
+
 " 文件导航定位到当前文件
 nmap <leader>` <Action>(SelectInProjectView)
-" quit
+" save / quit
+nmap <leader>w <Action>(SaveAll)
 nnoremap <leader>q :wq<CR>
 
 " 代码跳转与查看
 nmap gd <Action>(GotoDeclaration)
 nmap gD <Action>(GotoTypeDeclaration)
 nmap gi <Action>(GotoImplementation)
-nmap gr <Action>(FindUsages)
+nmap gu <Action>(FindUsages)
+nmap gh <Action>(QuickImplementations)
+nmap gc <Action>(CallHierarchy)
 nmap K  <Action>(QuickJavaDoc)
+
+" 符号大纲
+nmap <leader>o <Action>(FileStructurePopup)
 
 " 重构与代码修改
 nmap <leader>rn <Action>(RenameElement)
 nmap <leader>ca <Action>(ShowIntentionActions)
 nmap <leader>fm <Action>(ReformatCode)
 
-" 错误/警告跳转 (仿 vim.diagnostic.goto_next/prev)
+" 错误/警告跳转与诊断详情
 nmap [d <Action>(GotoPreviousError)
 nmap ]d <Action>(GotoNextError)
+nmap <leader>d <Action>(ShowErrorDescription)
 
 " ==============================================================================
 " 仿 Neovim Telescope / fzf 搜索快捷键 -> 映射到 IDE 搜索
+" 部分依赖 Fuzzier 插件（通过 IDE 插件系统安装即可)
 " ==============================================================================
-nmap <leader>ff <Action>(GotoFile)
-nmap <leader>fg <Action>(FindInPath)
-nmap <leader>fb <Action>(RecentFiles)
+" find_files
+nmap <Leader>ff <action>(com.mituuz.fuzzier.search.Fuzzier)
+" grep Case Insensitive
+nmap <Leader>fg <action>(com.mituuz.fuzzier.grep.FuzzyGrepCI)
+" grep in open files (buffers)
+nmap <Leader>fb <action>(com.mituuz.fuzzier.grep.FuzzyGrepOpenTabsCI)
+
 nmap <leader>fs <Action>(GotoSymbol)
 nmap <leader><space> <Action>(SearchEverywhere)
+
+" ==============================================================================
+" buffer 相关
+" ==============================================================================
+" buffer list
+nmap <leader>bl <Action>(Switcher)
 
 " 文件树切换 (仿 Neo-tree / Nvim-tree)
 nmap <leader>e <Action>(ActivateProjectToolWindow)
