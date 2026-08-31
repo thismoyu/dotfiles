@@ -53,9 +53,10 @@ nnoremap <leader>q :wq<CR>
 nmap gd <Action>(GotoDeclaration)
 nmap gD <Action>(GotoTypeDeclaration)
 nmap gi <Action>(GotoImplementation)
+" References（对齐 Neovim gr / lsp references）
+nmap gr <Action>(ShowUsages)
 nmap gu <Action>(FindUsages)
-nmap gh <Action>(QuickImplementations)
-nmap gc <Action>(CallHierarchy)
+nmap gh <Action>(CallHierarchy)
 nmap K  <Action>(QuickJavaDoc)
 
 " 符号大纲
@@ -81,7 +82,8 @@ nmap <Leader>ff <action>(com.mituuz.fuzzier.search.Fuzzier)
 nmap <Leader>fg <action>(com.mituuz.fuzzier.grep.FuzzyGrepCI)
 " grep in open files (buffers)
 nmap <Leader>fb <action>(com.mituuz.fuzzier.grep.FuzzyGrepOpenTabsCI)
-
+" recent files（对齐 Neovim Telescope oldfiles）
+nmap <Leader>fr <Action>(RecentFiles)
 nmap <leader>fs <Action>(GotoSymbol)
 nmap <leader><space> <Action>(SearchEverywhere)
 
