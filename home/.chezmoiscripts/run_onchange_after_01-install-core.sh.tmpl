@@ -82,6 +82,7 @@ install_module ripgrep   ripgrep ripgrep    ripgrep
 install_module zsh       zsh     zsh        zsh
 install_module tree      tree    tree       tree
 
+
 # ghq 官方仓库大多未打包，直接下载官方 release 到 ~/.local/bin。
 {{ if eq .chezmoi.os "darwin" -}}
 GHQ_URL="https://github.com/x-motemen/ghq/releases/download/v1.10.1/ghq_darwin_amd64.zip"
@@ -100,3 +101,5 @@ fi
 
 echo "install-core: 完成。"
 {{- end }}
+
+
