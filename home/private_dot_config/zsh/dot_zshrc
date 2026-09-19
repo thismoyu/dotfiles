@@ -63,6 +63,35 @@ zstyle ':fzf-tab:*' switch-group '<' '>'                     # 用 < > 在补全
 zstyle ':fzf-tab:*' use-fzf-default-opts yes                 # 复用 FZF_DEFAULT_OPTS 配色
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'  # cd 补全时预览目录内容
 
+
+# --- vi 模式 ---
+# 如果要关闭
+# bindkey -e
+# 1. 开启 vi 模式
+bindkey -v
+
+# 2. 将 Esc 的响应延迟缩短到 0.1 秒（解决卡顿感）
+export KEYTIMEOUT=1
+
+# 3. 让光标在普通模式显示为「方块」，输入模式显示为「竖线」
+function zle-keymap-select {
+  if [[ ${KEYMAP} == vicmd ]] ||
+     [[ $1 = 'block' ]]; then
+    echo -ne '\e[2 q' # 稳固的方块光标
+  elif [[ ${KEYMAP} == main ]] ||
+       [[ ${KEYMAP} == viins ]] ||
+       [[ ${KEYMAP} = '' ]] ||
+       [[ $1 = 'beam' ]]; then
+    echo -ne '\e[5 q' # 闪烁的竖线光标
+  fi
+}
+zle -N zle-keymap-select
+
+# 初始化光标为竖线
+echo -ne '\e[5 q'
+preexec() { echo -ne '\e[5 q' } # 每次执行命令后重置光标为竖线
+
+
 # --- 键位 ---
 bindkey "^[[1;5C" forward-word   # Ctrl+Right 向右跳一个词
 bindkey "^[[1;5D" backward-word  # Ctrl+Left  向左跳一个词
