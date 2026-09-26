@@ -7,10 +7,10 @@ csvpreview() {
   sed 's/,,/, ,/g;s/,,/, ,/g' "$@" | column -s, -t | less -#2 -N -S
 }
 
-# 目录书签（gd）
-_GD_DIR="$ZDOTDIR/jump"
-_GD_LUA="$_GD_DIR/quick_jump.lua"
-_GD_LIST="$_GD_DIR/quick_jump_list"
+# 目录书签（gd）：脚本在 ZDOTDIR，书签列表在 XDG 缓存目录
+_GD_LUA="$ZDOTDIR/jump/quick_jump.lua"
+_GD_LIST="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/quick_jump_list"
+[[ -d "${_GD_LIST:h}" ]] || mkdir -p "${_GD_LIST:h}"
 
 gd() {
   local opt="$1"

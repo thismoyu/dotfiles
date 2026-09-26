@@ -1,6 +1,13 @@
 local jump, home = {}, os.getenv('HOME')
-local zdotdir = os.getenv('ZDOTDIR') or (home .. '/.config/zsh')
-local file_path = zdotdir .. '/jump/quick_jump_list'
+local cache_home = os.getenv('XDG_CACHE_HOME') or (home .. '/.cache')
+local file_path = cache_home .. '/zsh/quick_jump_list'
+
+local function ensure_parent_dir(path)
+  local dir = path:match('(.+)/[^/]+$')
+  if dir then
+    os.execute('mkdir -p "' .. dir .. '"')
+  end
+end
 
 local function read_jump_list()
   local file = io.open(file_path, 'r')
@@ -19,6 +26,7 @@ local function read_jump_list()
 end
 
 local function add_jump_list(keyword, dir)
+  ensure_parent_dir(file_path)
   local file = io.open(file_path, 'a')
   if not file then
     return
