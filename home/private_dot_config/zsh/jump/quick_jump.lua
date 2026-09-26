@@ -36,6 +36,27 @@ local function add_jump_list(keyword, dir)
   io.close(file)
 end
 
+local function remove_jump_list(keyword)
+  if not keyword or keyword == '' then
+    io.stderr:write('gd: -r 需要书签名称\n')
+    os.exit(1)
+  end
+  if jump[keyword] == nil then
+    io.stderr:write('gd: 书签不存在: ' .. keyword .. '\n')
+    os.exit(1)
+  end
+
+  jump[keyword] = nil
+  local file = io.open(file_path, 'w')
+  if not file then
+    return
+  end
+  for k, v in pairs(jump) do
+    file:write(k .. ':' .. v .. '\n')
+  end
+  io.close(file)
+end
+
 read_jump_list()
 
 local opt = arg[1]
@@ -49,6 +70,8 @@ elseif opt == '-a' then
   -----@diagnostic disable-next-line: param-type-mismatch
   arg[3] = string.gsub(arg[3], home, '~', 1)
   add_jump_list(arg[2], arg[3])
+elseif opt == '-r' then
+  remove_jump_list(arg[2])
 elseif jump[opt] == nil then
   print(opt)
 else

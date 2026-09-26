@@ -14,8 +14,21 @@ _GD_LIST="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/quick_jump_list"
 
 gd() {
   local opt="$1"
-  if [[ "$opt" == "-a" ]]; then
+  if [[ "$opt" == "-h" || "$opt" == "--help" ]]; then
+    cat <<'EOF'
+用法: gd [选项|书签|目录]
+
+  gd <书签|目录>   跳转到书签对应目录，或直接 cd 到目录
+  gd -a <名称>     将当前目录添加为书签
+  gd -r <名称>     删除指定书签
+  gd -l            列出所有书签
+  gd -e            用 $EDITOR 编辑书签列表
+  gd -h            显示帮助
+EOF
+  elif [[ "$opt" == "-a" ]]; then
     lua "$_GD_LUA" -a "$2" "$(pwd)"
+  elif [[ "$opt" == "-r" ]]; then
+    lua "$_GD_LUA" -r "$2"
   elif [[ "$opt" == "-l" ]]; then
     lua "$_GD_LUA" -l
   elif [[ "$opt" == "-e" ]]; then
